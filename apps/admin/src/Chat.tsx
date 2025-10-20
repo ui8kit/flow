@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import { Block, Stack, Group, Title, Text, Box, Button, Icon } from '@ui8kit/core'
 import { Input, Switch } from '@ui8kit/form'
 import { flowConfig } from '@/agents/zxTP2RwfuBz1lXA6/config'
@@ -19,11 +19,29 @@ export default function Chat() {
   const [noHistory, setNoHistory] = useState<boolean>(true)
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesRef = useRef<Message[]>([])
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [barRect, setBarRect] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
     messagesRef.current = messages
   }, [messages])
+
+  useLayoutEffect(() => {
+    const update = () => {
+      const el = containerRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      setBarRect({ left: r.left, width: r.width })
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update, { passive: true })
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update as any)
+    }
+  }, [])
 
   const supervisor = useMemo(() => flowConfig.agents.find(a => a.role === 'supervisor') || flowConfig.agents[0], [])
   const capabilities = useMemo(() => flowConfig.tools
@@ -63,11 +81,10 @@ export default function Chat() {
   }
 
   return (
-    <Block position="relative" w="full" component="section">
-      <Stack gap="md">
+    <Block position="relative" w="full" component="section" ref={containerRef as any}>
+      <Stack gap="md" style={{ marginBottom: '6rem !important' }}>
         <Title order={3}>Chat</Title>
-        <Text size="sm" c="muted">Agent: {currentAgent}</Text>
-        <Box bg="card" p="md" rounded="md">
+        <Box bg="card" p="md" rounded="md" style={{ paddingBottom: '6rem' }}>
           <Stack gap="sm">
             {messages.map((m, i) => (
               <Box position="relative" key={i} p="none" bg={m.role === 'user' ? 'accent' : 'muted'} rounded="sm">
@@ -81,13 +98,18 @@ export default function Chat() {
             ))}
           </Stack>
         </Box>
-        <Text size="xs" c="muted">Supervisor: {supervisor?.name ?? supervisor?.id}</Text>
         <Group gap="sm" align="center">
-          <Switch checked={noHistory} onChange={(e: any) => setNoHistory(!!e.currentTarget.checked)} />
-          <Text size="xs" c="muted">No history</Text>
+          <Text size="xs" c="muted">Supervisor: </Text>
+            <Text size="xs" c="accent">{supervisor?.name ?? supervisor?.id}</Text>
+            <Text size="xs" c="muted">Agent: </Text>
+            <Text size="xs" c="accent">{currentAgent}</Text>
+          <Group gap="sm" align="center" justify="end">
+            <Switch checked={noHistory} onChange={(e: any) => setNoHistory(!!e.currentTarget.checked)} />
+            <Text size="xs" c="muted">No history</Text>
+          </Group>
         </Group>
       </Stack>
-    <Box position="absolute" style={{ left: 0, right: 0, bottom: '1rem' }}>
+    <Box position="fixed" style={{ left: `${barRect.left}px`, width: `${barRect.width}px`, bottom: '1rem', zIndex: 10 }}>
       <Box bg="card" p="sm" rounded="md" border="1px">
         <Group gap="sm">
           <Input
