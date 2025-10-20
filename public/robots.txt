@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Sitemap: https://buildy-ui.vercel.app/sitemap.xml
+
+# Disallow specific directories or files if needed
+# Disallow: /private/
+# Disallow: /admin/

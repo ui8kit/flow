@@ -1,0 +1,15 @@
+@import "tailwindcss" source(none);
+
+@import "./shadcn.css";
+
+@source "../../../node_modules/@ui8kit/core/dist/**/*.{js}";
+@source "../../**/*.{ts,tsx}";
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+  .prose {
+    @apply !text-[.925rem];
+  }
+}
