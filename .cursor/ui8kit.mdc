@@ -1,0 +1,103 @@
+---
+description: Apply this rule whenever `ui8kit` or `core ui` is mentioned.
+alwaysApply: false
+---
+# ui9kit interface composition rule (@ui8kit.mdc)
+
+- **Source of truth — `ui8kit`**: Build UI only from `ui8kit` primitives (`Block`, `Container`, `Grid`, `Stack`, `Text`, `Title`, `Button`, `Card`, `Icon`, etc.). Do not use `className`/`style` or external CSS classes. Exception: third‑party integrations (e.g., resizers) where `className` is unavoidable; such styles must stay neutral and must not bypass design tokens.
+
+- **No decoration inside core**: Core forbids hover shadows, animations, gradients, custom colors, and any decorative effects. Visual polish belongs to templates/brand level only.
+
+- **Architecture (Atomic)**:
+  - `@ui` → atoms (primitives)
+  - `@components` → molecules
+  - `@factory` → organisms/composers
+  - templates/brand → final assembly
+
+- **Variants via CVA**: Define and extend variants only under `variants`. Components must not duplicate or conflict with these variants; components simply proxy props into CVA. Important: at the application code level (pages and application features), do not import or use `*Variants` sets (e.g., `spacingVariants`, `layoutVariants`). These sets are intended for creating/extending intermediate and reusable components in the general UI layer, while in the application, only composite components should be used (`Block`, `Container`, `Grid`, `Group`, `Stack`, `Box`, `Title`, `Text`, `Button`, `Card`, `Badge`, `Image`, `Icon`, `Sheet`, `Accordion`).
+  - Variants export: [src/core/src/core/variants/index.ts](mdc:src/core/src/core/variants/index.ts)
+
+- **Theme and tokens**: Use tokens from `src/core/src/themes` for sizes, radii, shadows, etc. (e.g., `theme.rounded`, `theme.buttonSize`). Colors use shadcn names; any extension should live in a separate tokens file.
+  - Theme: [src/core/src/themes/index.ts](mdc:src/core/src/themes/index.ts), example: [src/core/src/themes/skyOS.ts](mdc:src/core/src/themes/skyOS.ts)
+
+- **Width and layout**: Control container width only via `Container` props. Compose layout with `Container`, `Grid`, `Stack`, `Box`, `Block` instead of utility classes.
+
+- **Icons**: Use the `Icon` component with `lucideIcon`. Do not inline SVGs directly.
+
+- **Responsiveness**: Use `src/core/src/hooks` for responsive branching (e.g., `useMobile`), not custom media classes.
+  - Export: [src/core/src/hooks/index.ts](mdc:src/core/src/hooks/index.ts)
+
+- **Comments and code style**: All code comments must be in English. Naming and props should be descriptive and consistent.
+
+- **Single entrypoint and aliases**: Always import from the package root `@ui8kit/core`. Do not import target files directly. Everything is re-exported from `src/core/src/index.ts` and must be consumed via the alias.
+  - tsconfig paths:
+    ```jsonc
+    // tsconfig.json
+    {
+      "compilerOptions": {
+        "paths": {
+          "@ui8kit/core": ["src/core/src/index"],
+          "@ui8kit/core/*": ["src/core/src/*"]
+        }
+      }
+    }
+    ```
+  - Vite alias:
+    ```ts
+    // vite.config.ts
+    import path from 'path'
+
+    export default defineConfig({
+      resolve: {
+        alias: {
+          '@ui8kit/core': path.resolve(__dirname, './src/core/src')
+        }
+      }
+    })
+    ```
+  - Example imports (components, variants, themes, hooks, factory):
+    ```tsx
+    import { Block, Container, Title, Text, Button } from '@ui8kit/core'
+    import { ThemeProvider, skyOSTheme } from '@ui8kit/core'
+    ```
+
+## Quick checklist
+- Uses only `ui8kit` components without `className`/`style`? (unless an external integration requires it)
+- Application code does not import `*Variants` (e.g., `spacingVariants`, `layoutVariants`) — only composite components are used
+- All sizes/radii/colors come from `src/core/src/themes` tokens and allowed shadcn color names?
+- Width is controlled by `Container` props and layout by `Grid`/`Stack`/`Box`?
+- Icons via `Icon` + `lucideIcon`?
+- Responsive branching via `src/core/src/hooks`?
+
+## Example Page
+
+```tsx
+import { Block, Container, Button, Title, Text, Stack } from '@ui8kit/core'
+import { ThemeProvider, useTheme, skyOSTheme } from '@ui8kit/core'
+
+function AppContent() {
+  const { toggleDarkMode, isDarkMode } = useTheme()
+
+  return (
+    <Block variant="section" py="xl">
+      <Container>
+      <Stack gap="lg" align="center" ta="center">
+      <Title size="4xl">Welcome to UI8Kit Page</Title>
+      <Text>Create beautiful web applications with ease using our UI components</Text>
+        <Button variant={isDarkMode ? 'primary' : 'secondary'} onClick={toggleDarkMode}>
+          {!isDarkMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
+        </Button>
+        </Stack>
+      </Container>
+    </Block>
+  )
+}
+
+export default function App() {
+  return (
+    <ThemeProvider theme={skyOSTheme}>
+      <AppContent />
+    </ThemeProvider>
+  )
+}
+```
