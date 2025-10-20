@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Block, Stack, Group, Title, Text, Box, Button, Icon } from '@ui8kit/core'
-import { Input } from '@ui8kit/form'
+import { Input, Switch } from '@ui8kit/form'
 import { flowConfig } from '@/agents/zxTP2RwfuBz1lXA6/config'
 import { Orchestrator } from '@/orchestrator'
 import { CopyIcon, SendIcon } from 'lucide-react'
@@ -16,6 +16,7 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [currentAgent, setCurrentAgent] = useState<string>('Supervisor Agent')
+  const [noHistory, setNoHistory] = useState<boolean>(true)
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesRef = useRef<Message[]>([])
 
@@ -35,7 +36,7 @@ export default function Chat() {
     const model = (import.meta as any).env?.VITE_MODEL_NAME || 'gpt-4.1-mini'
     if (!apiKey) return 'Please set VITE_OPENAI_API_KEY in your .env'
     const orchestrator = new Orchestrator(apiKey, model)
-    const history = messagesRef.current.slice(-8) as any
+    const history = noHistory ? [] : (messagesRef.current.slice(-8) as any)
     return await orchestrator.runSupervisorFlow(supervisor?.system, capabilities as string[], history as any, prompt)
   }
 
@@ -62,11 +63,11 @@ export default function Chat() {
   }
 
   return (
-    <Block w="full" component="section">
+    <Block position="relative" w="full" component="section">
       <Stack gap="md">
         <Title order={3}>Chat</Title>
         <Text size="sm" c="muted">Agent: {currentAgent}</Text>
-        <Box bg="card" p="md" rounded="md" style={{ height: 420, overflowY: 'auto' }}>
+        <Box bg="card" p="md" rounded="md">
           <Stack gap="sm">
             {messages.map((m, i) => (
               <Box position="relative" key={i} p="none" bg={m.role === 'user' ? 'accent' : 'muted'} rounded="sm">
@@ -80,6 +81,14 @@ export default function Chat() {
             ))}
           </Stack>
         </Box>
+        <Text size="xs" c="muted">Supervisor: {supervisor?.name ?? supervisor?.id}</Text>
+        <Group gap="sm" align="center">
+          <Switch checked={noHistory} onChange={(e: any) => setNoHistory(!!e.currentTarget.checked)} />
+          <Text size="xs" c="muted">No history</Text>
+        </Group>
+      </Stack>
+    <Box position="absolute" style={{ left: 0, right: 0, bottom: '1rem' }}>
+      <Box bg="card" p="sm" rounded="md" border="1px">
         <Group gap="sm">
           <Input
             ref={inputRef}
@@ -87,14 +96,14 @@ export default function Chat() {
             onChange={(e) => setInput(e.currentTarget.value)}
             placeholder="Type message..."
             disabled={loading}
-            data-class="input"
+            data-class="input-chat"
             autoComplete="off"
             className="text-secondary-foreground text-sm md:text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
           />
           <Button variant="ghost" onClick={send} disabled={loading}><Icon lucideIcon={SendIcon} /></Button>
         </Group>
-        <Text size="xs" c="muted">Supervisor: {supervisor?.name ?? supervisor?.id}</Text>
-      </Stack>
+      </Box>
+    </Box>
     </Block>
   )
 }
