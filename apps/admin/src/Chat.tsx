@@ -3,7 +3,7 @@ import { Block, Stack, Group, Title, Text, Box, Button, Icon } from '@ui8kit/cor
 import { Input } from '@ui8kit/form'
 import { flowConfig } from '@/agents/zxTP2RwfuBz1lXA6/config'
 import { Orchestrator } from '@/orchestrator'
-import { SendIcon } from 'lucide-react'
+import { CopyIcon, SendIcon } from 'lucide-react'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -69,11 +69,13 @@ export default function Chat() {
         <Box bg="card" p="md" rounded="md" style={{ height: 420, overflowY: 'auto' }}>
           <Stack gap="sm">
             {messages.map((m, i) => (
-              <Box key={i} p="sm" bg={m.role === 'user' ? 'accent' : 'muted'} rounded="sm">
-                <Group justify="between" align="start" gap="sm">
+              <Box position="relative" key={i} p="none" bg={m.role === 'user' ? 'accent' : 'muted'} rounded="sm">
+                <Group p="sm" justify="between" align="start" gap="sm">
                   <Text c="foreground" style={{ whiteSpace: 'pre-wrap' }}>{m.content}</Text>
-                  <Button variant="ghost" onClick={() => copyToClipboard(m.content)}>Copy</Button>
                 </Group>
+                  <Box position="absolute" style={{ bottom: 0, right: '-.5rem' }}>
+                    <Button variant="link" size="sm" onClick={() => copyToClipboard(m.content)}><Icon lucideIcon={CopyIcon} /></Button>
+                  </Box>
               </Box>
             ))}
           </Stack>
@@ -87,9 +89,9 @@ export default function Chat() {
             disabled={loading}
             data-class="input"
             autoComplete="off"
-            className="text-sm md:text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+            className="text-secondary-foreground text-sm md:text-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
           />
-          <Button onClick={send} disabled={loading}><Icon lucideIcon={SendIcon} /></Button>
+          <Button variant="ghost" onClick={send} disabled={loading}><Icon lucideIcon={SendIcon} /></Button>
         </Group>
         <Text size="xs" c="muted">Supervisor: {supervisor?.name ?? supervisor?.id}</Text>
       </Stack>
