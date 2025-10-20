@@ -10,8 +10,12 @@
     "build:agents": "ui8kit-agent-builder src/source src/agents"
   },
   "dependencies": {
+    "@openai/agents": "^0.1.10",
+    "@openai/guardrails": "^0.1.1",
+    "@supabase/supabase-js": "^2.75.1",
     "@ui8kit/core": "^0.1.7-b",
     "lucide-react": "^0.460.0",
+    "openai": "^6.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.0.1",

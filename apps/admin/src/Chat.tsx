@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Block, Stack, Group, Title, Text, Box, Button } from '@ui8kit/core'
 import { flowConfig } from '@/agents/zxTP2RwfuBz1lXA6/config'
+import { Orchestrator } from '@/orchestrator'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -24,7 +25,7 @@ export default function Chat() {
     if (!text) return
     setInput('')
     setMessages(prev => [...prev, { role: 'user', content: text }])
-    const reply = await callOpenAI(text)
+    const reply = await callOrchestrator(text)
     setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     inputRef.current?.focus()
   }
@@ -58,28 +59,15 @@ export default function Chat() {
   )
 }
 
-async function callOpenAI(prompt: string): Promise<string> {
+async function callOrchestrator(prompt: string): Promise<string> {
   const apiKey = (import.meta as any).env?.VITE_OPENAI_API_KEY
   const model = (import.meta as any).env?.VITE_MODEL_NAME || 'gpt-4.1-mini'
   if (!apiKey) return 'Please set VITE_OPENAI_API_KEY in your .env'
-  try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant.' },
-          { role: 'user', content: prompt }
-        ]
-      })
-    })
-    if (!res.ok) throw new Error(await res.text())
-    const data = await res.json()
-    return data.choices?.[0]?.message?.content || 'No response'
-  } catch (e: any) {
-    return `Error: ${e?.message || 'unknown'}`
-  }
+  const orchestrator = new Orchestrator(apiKey, model)
+  return await orchestrator.chat([
+    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'user', content: prompt }
+  ])
 }
 
 
