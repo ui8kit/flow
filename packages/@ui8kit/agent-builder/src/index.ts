@@ -62,11 +62,41 @@ export async function buildAgents(opts: BuildOptions): Promise<void> {
       toolSchemas[t.id] = { input: inputShape, output: {} };
     }
 
+    // optional mapping file overrides
+    const baseName = path.parse(entry).name;
+    const mapPath = path.join(opts.sourceDir, `${baseName}.map.json`);
+    const mapping = await readOptionalJson(mapPath);
+    if (mapping) {
+      const inputs = (mapping as any).inputs || {};
+      const outputs = (mapping as any).outputs || {};
+      for (const [toolId, ov] of Object.entries(inputs as Record<string, unknown>)) {
+        const bag = toolSchemas[toolId];
+        if (!bag) continue;
+        const overrides = ov as Record<string, string>;
+        bag.input = { ...bag.input, ...overrides };
+      }
+      for (const [toolId, out] of Object.entries(outputs as Record<string, unknown>)) {
+        const bag = toolSchemas[toolId];
+        if (!bag) continue;
+        const outShape = out as Record<string, string>;
+        bag.output = { ...(bag.output || {}), ...outShape };
+      }
+    }
+
     const schemaTs = buildSchemaTs(toolSchemas);
 
     await fs.writeFile(path.join(agentDir, 'config.ts'), configTs, 'utf8');
     await fs.writeFile(path.join(agentDir, 'schema.ts'), schemaTs, 'utf8');
     await fs.writeFile(path.join(agentDir, 'index.ts'), "export * from './config';\nexport * from './schema';\n", 'utf8');
+  }
+}
+
+async function readOptionalJson(p: string): Promise<unknown | null> {
+  try {
+    const raw = await fs.readFile(p, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
   }
 }
 
@@ -91,6 +121,9 @@ function buildInputShapeFromNode(node: any): Record<string, string> {
   if (node.type === 'n8n-nodes-base.httpRequestTool') {
     const shape: Record<string, string> = {};
     if (typeof node.parameters?.url === 'string') shape.url = 'string';
+    if (typeof node.parameters?.method === 'string') shape.method = 'string';
+    if (typeof node.parameters?.sendQuery === 'boolean') shape.sendQuery = 'boolean';
+    if (typeof node.parameters?.sendBody === 'boolean') shape.sendBody = 'boolean';
     const qp = node.parameters?.queryParameters?.parameters;
     if (Array.isArray(qp)) {
       for (const p of qp) {
@@ -118,15 +151,41 @@ function safeName(id: string): string {
 function buildSchemaTs(toolSchemas: Record<string, { input: Record<string, string> }>): string {
   let out = `import { z } from 'zod';\n\n`;
   for (const [toolId, s] of Object.entries(toolSchemas)) {
-    const varName = `${safeName(toolId)}Input`;
-    const entries = Object.entries(s.input || {});
+    const inVar = `${safeName(toolId)}Input`;
+    const entries = Object.entries((s as any).input || {});
     const props = entries.map(([key, type]) => {
-      const zExpr = type === 'string' ? 'z.string()' : 'z.unknown()';
+      const zExpr = toZodExpr(type as string);
       return `  ${JSON.stringify(key)}: ${zExpr}`;
     }).join(',\n');
-    out += `export const ${varName} = z.object({${props ? '\n' + props + '\n' : ''}});\n`;
-    out += `export type ${varName} = z.infer<typeof ${varName}>;\n\n`;
+    out += `export const ${inVar} = z.object({${props ? '\n' + props + '\n' : ''}});\n`;
+    out += `export type ${inVar} = z.infer<typeof ${inVar}>;\n`;
+
+    const outEntries = Object.entries((s as any).output || {});
+    if (outEntries.length) {
+      const outProps = outEntries.map(([key, type]) => `  ${JSON.stringify(key)}: ${toZodExpr(type as string)}`).join(',\n');
+      const outVar = `${safeName(toolId)}Output`;
+      out += `export const ${outVar} = z.object({\n${outProps}\n});\n`;
+      out += `export type ${outVar} = z.infer<typeof ${outVar}>;\n`;
+    }
+    out += `\n`;
   }
   return out;
+}
+
+function toZodExpr(type: string): string {
+  switch (type) {
+    case 'string':
+      return 'z.string()';
+    case 'number':
+      return 'z.number()';
+    case 'boolean':
+      return 'z.boolean()';
+    case 'array':
+      return 'z.array(z.unknown())';
+    case 'object':
+      return 'z.record(z.unknown())';
+    default:
+      return 'z.unknown()';
+  }
 }
 

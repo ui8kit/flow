@@ -6,7 +6,7 @@ import App from '@/App'
 import NotFound from '@/exceptions/NotFound'
 import ErrorBoundary from '@/exceptions/ErrorBoundary'
 // routes
-import { Blank } from '@/Blank'
+import Chat from '@/Chat'
 // styles
 import './assets/css/index.css'
 
@@ -16,7 +16,7 @@ const router = createBrowserRouter([
     element: <App />,
     errorElement: <ErrorBoundary />,
     children: [
-      { index: true, element: <Blank /> },
+      { index: true, element: <Chat /> },
       { path: '*', element: <NotFound /> }
     ]
   }

@@ -23,6 +23,7 @@ export type _64b0c089_c197_4337_bb8c_e1bb1a53fda1Input = z.infer<typeof _64b0c08
 
 export const b570055d_6530_45fa_bf7a_1700cbef31e6Input = z.object({
   "url": z.string(),
+  "sendQuery": z.boolean(),
   "q": z.string()
 });
 export type b570055d_6530_45fa_bf7a_1700cbef31e6Input = z.infer<typeof b570055d_6530_45fa_bf7a_1700cbef31e6Input>;
@@ -34,6 +35,8 @@ export type _85aa81d8_5a01_4608_8fb6_e02312b5f456Input = z.infer<typeof _85aa81d
 
 export const cf3d068d_11bc_4c73_9ef2_2d4676b59d3eInput = z.object({
   "url": z.string(),
+  "method": z.string(),
+  "sendBody": z.boolean(),
   "prompt": z.string()
 });
 export type cf3d068d_11bc_4c73_9ef2_2d4676b59d3eInput = z.infer<typeof cf3d068d_11bc_4c73_9ef2_2d4676b59d3eInput>;

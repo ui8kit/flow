@@ -15,7 +15,7 @@ import {
 // Sidebar Navigation Component
 export const Sidebar = () => {
   const menuItems = [
-    { label: 'Dashboard', icon: '📊', active: true },
+    { label: 'Chat', icon: '💬', href: '/' },
     { label: 'Users', icon: '👥', active: false },
     { label: 'Products', icon: '📦', active: false },
     { label: 'Orders', icon: '🛒', active: false },
@@ -28,15 +28,16 @@ export const Sidebar = () => {
       <Title order={4} className="mb-4">Admin Panel</Title>
       <Stack gap="sm">
         {menuItems.map((item) => (
-          <Button
-            key={item.label}
-            variant={item.active ? 'primary' : 'ghost'}
-            leftSection={<span>{item.icon}</span>}
-            contentAlign="start"
-            style={{ width: '100%' }}
-          >
-            {item.label}
-          </Button>
+          <a key={item.label} href={item.href || '#'}>
+            <Button
+              variant={item.href ? 'ghost' : 'ghost'}
+              leftSection={<span>{item.icon}</span>}
+              contentAlign="start"
+              style={{ width: '100%' }}
+            >
+              {item.label}
+            </Button>
+          </a>
         ))}
       </Stack>
     </Stack>
