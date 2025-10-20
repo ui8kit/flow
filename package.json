@@ -1,16 +1,17 @@
 {
-  "name": "@semantic/workspace",
+  "name": "@ui8kit/workspace",
   "version": "0.0.1",
   "private": true,
   "license": "GPL-3.0",
   "type": "module",
   "author": {
-    "name": "buildy",
+    "name": "ui8kit",
     "url": "https://ui.buildy.tw"
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "packages/@*/*"
   ],
   "scripts": {
     "dev": "bunx turbo run dev",

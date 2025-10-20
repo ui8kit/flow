@@ -1,21 +1,25 @@
 {
-  "name": "@semantic/vite-admin",
+  "name": "@ui8kit/admin",
   "private": true,
   "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:agents": "ui8kit-agent-builder src/source src/agents"
   },
   "dependencies": {
     "@ui8kit/core": "^0.1.7-b",
     "lucide-react": "^0.460.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.0.1"
+    "react-router-dom": "^7.0.1",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@ui8kit/flow": "workspace:*",
+    "@ui8kit/agent-builder": "workspace:*",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",

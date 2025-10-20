@@ -1,0 +1,499 @@
+{
+  "name": "Smart Supervisor Content Creation Assistant with Multi-Agent Monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "fd6b4d07-1161-482e-8e29-bdd16efe82f7",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "b90fe710-bebf-468f-b116-0eeeef87992f"
+    },
+    {
+      "parameters": {},
+      "id": "50599365-9318-409f-bb40-20d6ade1662c",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a smart supervisor assistant that can communicate on various topics and answer questions. You have access to two specialized agents:\n\n1. Observer Agent - Monitors conversation topics and identifies when users want to create content (articles, social media posts, etc.). It captures the essence of the conversation to determine content creation intent.\n\n2. Content Creation Agent - Handles all content creation tasks once the Observer identifies the intent. This agent has access to specialized tools for internet search, image generation, and article planning.\n\nYour role is to:\n- Engage naturally in conversations on any topic\n- Use the Observer Agent to monitor for content creation intent\n- Delegate to the Content Creation Agent when content needs to be created\n- Provide helpful, accurate responses to user questions"
+        }
+      },
+      "id": "ac32c8d9-507e-4bd6-ad2a-cda3ce61e5d2",
+      "name": "Supervisor Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "23e1cfb5-6272-44c6-8f00-9a9046b16f15",
+      "name": "Supervisor LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "tEoYK4pHA7jyiL3D",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Monitors the conversation to identify when the user wants to create content of any type (articles, social media posts, blog posts, etc.). Returns true if content creation intent is detected, false otherwise.",
+        "text": "={{ $fromAI('observe_conversation_topic') }}",
+        "options": {
+          "systemMessage": "You are an observer agent that monitors conversations to detect content creation intent. Your job is to:\n\n1. Analyze the conversation context and user messages\n2. Identify when the user expresses desire to create content (articles, posts, blogs, etc.)\n3. Capture the essence of what type of content they want to create\n4. Return a clear signal when content creation should begin\n\nDo NOT capture the entire conversation context - only the essential information about content creation intent.\n\nRespond with:\n- \"CONTENT_INTENT_DETECTED: [brief description of content type and topic]\" when you detect content creation intent\n- \"NO_CONTENT_INTENT\" when the conversation is general discussion"
+        }
+      },
+      "id": "a547b07f-17f8-466e-be93-b737fc963161",
+      "name": "Observer Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "3a8ae122-d35f-4f6c-bf9e-feae6d183881",
+      "name": "Observer LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        432
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "tEoYK4pHA7jyiL3D",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Creates content of any type (articles, social media posts, blogs, etc.) using specialized sub-agents for internet search, image generation, and article planning.",
+        "text": "={{ $fromAI('content_request', 'The content creation request from the user', 'string') }}",
+        "options": {
+          "systemMessage": "You are a content creation specialist agent with access to powerful tools:\n\n1. Internet Search Agent - Search the web for relevant information, research topics, find sources\n2. Image Creation Agent - Generate images for your content using AI image generation\n3. Article Planning Agent - Create structured outlines and plans for articles and long-form content\n\nYour role is to:\n- Understand the content creation request from the user\n- Use the appropriate tools to gather information, create images, or plan structure\n- Produce high-quality content that meets the user's needs\n- Be creative and thorough in your content creation process\n\nAlways ask clarifying questions if the content requirements are unclear."
+        }
+      },
+      "id": "259e04f2-2bbf-48b7-a614-69e012e28ff3",
+      "name": "Content Creation Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "e4d74f20-70bf-4a6f-a4ef-1dc581cb30cb",
+      "name": "Content Creation LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        432
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "tEoYK4pHA7jyiL3D",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Searches the internet for information on any topic. Provide a search query and get relevant results.",
+        "text": "={{ $fromAI('search_query', 'The search query to look up on the internet', 'string') }}",
+        "options": {
+          "systemMessage": "You are an internet search specialist. Your job is to:\n\n1. Take search queries from the content creation agent\n2. Use the Search API Tool to find relevant information\n3. Analyze and summarize the search results\n4. Return the most relevant and useful information\n\nBe thorough in your searches and provide accurate, up-to-date information."
+        }
+      },
+      "id": "64b0c089-c197-4337-bb8c-e1bb1a53fda1",
+      "name": "Internet Search Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "524793ef-cbfc-4e49-8239-3c4e948a6ed8",
+      "name": "Search Agent LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        640
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "tEoYK4pHA7jyiL3D",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.example.com/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $fromAI('search_query', 'The search query to look up') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b570055d-6530-45fa-bf7a-1700cbef31e6",
+      "name": "Search API Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Generates images using AI based on text descriptions. Provide a detailed description of the image you want to create.",
+        "text": "={{ $fromAI('generate_image') }}",
+        "options": {
+          "systemMessage": "You are an image generation specialist. Your job is to:\n\n1. Take image description requests from the content creation agent\n2. Craft detailed prompts for the Image Generation API\n3. Use the Image Generation API Tool to create images\n4. Return the generated images to the content creation agent\n\nCreate high-quality, relevant images that enhance the content being created."
+        }
+      },
+      "id": "85aa81d8-5a01-4608-8fb6-e02312b5f456",
+      "name": "Image Creation Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "2ded66ca-1148-4420-a849-be6769a92206",
+      "name": "Image Agent LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        640
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "tEoYK4pHA7jyiL3D",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.example.com/generate-image",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $fromAI('image_prompt', 'Detailed description of the image to generate') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cf3d068d-11bc-4c73-9ef2-2d4676b59d3e",
+      "name": "Image Generation API Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1264,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Creates structured outlines and plans for articles and long-form content. Provide the topic and get a detailed content plan.",
+        "text": "={{ $fromAI('plan_article') }}",
+        "options": {
+          "systemMessage": "You are an article planning specialist. Your job is to:\n\n1. Take article topics from the content creation agent\n2. Create comprehensive outlines with sections, subsections, and key points\n3. Suggest content structure, flow, and organization\n4. Provide recommendations for research areas and supporting content\n\nCreate detailed, well-organized plans that make content creation easier and more effective."
+        }
+      },
+      "id": "e4d01cd0-c95d-4375-a927-8933463d94bc",
+      "name": "Article Planning Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "f5760e6e-5489-4ca4-808d-87be68fb0d1b",
+      "name": "Planning Agent LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        640
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "tEoYK4pHA7jyiL3D",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supervisor LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Observer Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Creation Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Supervisor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Observer LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Observer Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Creation LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Creation Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Internet Search Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Content Creation Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Creation Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Content Creation Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Article Planning Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Content Creation Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Agent LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Internet Search Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search API Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Internet Search Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Agent LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Image Creation Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Generation API Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Image Creation Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planning Agent LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Article Planning Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3429f3df-348f-4a2c-8b4b-f870c52b4cc5",
+  "meta": {
+    "instanceId": "ef99eb19e34d167461436992d0274fd02d9d5ce1fab8f5b6bf0d96d3c4fee4bd"
+  },
+  "id": "zxTP2RwfuBz1lXA6",
+  "tags": []
+}

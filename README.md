@@ -1,5 +1,11 @@
-# UI8Kit Semantic pure HTML5 React App Builder
+# Agent AI Builder based UI8Kit
 
-## 📄 License
+## Start App
+
+`bun install`
+
+`bun run dev`
+
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
