@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import { Block, Stack, Group, Title, Text, Box, Button, Icon } from '@ui8kit/core'
-import { Input, Switch } from '@ui8kit/form'
+import { Input, Switch, Label } from '@ui8kit/form'
 import { flowConfig } from '@/agents/zxTP2RwfuBz1lXA6/config'
 import { Orchestrator } from '@/orchestrator'
 import { CopyIcon, SendIcon } from 'lucide-react'
@@ -48,6 +48,10 @@ export default function Chat() {
     .map(t => t.name)
     .filter(Boolean)
     .filter(n => n !== 'Chat Trigger' && n !== 'Conversation Memory'), [])
+  const contentToolName = useMemo(() => {
+    const t = (flowConfig.tools || []).find(t => (t.name || '').toLowerCase().includes('content'))
+    return t?.name
+  }, [])
 
   const callSupervisor = async (prompt: string): Promise<string> => {
     const apiKey = (import.meta as any).env?.VITE_OPENAI_API_KEY
@@ -70,6 +74,11 @@ export default function Chat() {
     setLoading(true)
     const reply = await callSupervisor(text)
     setLoading(false)
+    if (/CONTENT_INTENT_DETECTED/i.test(reply)) {
+      if (contentToolName) setCurrentAgent(contentToolName)
+    } else if (/NO_CONTENT_INTENT/i.test(reply)) {
+      setCurrentAgent('Supervisor Agent')
+    }
     setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     inputRef.current?.focus()
   }
@@ -82,9 +91,21 @@ export default function Chat() {
 
   return (
     <Block position="relative" w="full" component="section" ref={containerRef as any}>
-      <Stack gap="md" style={{ marginBottom: '6rem !important' }}>
+      <Stack gap="md" style={{ marginBottom: '6rem' }}>
         <Title order={3}>Chat</Title>
-        <Box bg="card" p="md" rounded="md" style={{ paddingBottom: '6rem' }}>
+          <Box mt="md">
+        <Group gap="sm">
+          <Text size="xs" c="muted">Supervisor: </Text>
+            <Text size="xs" c="accent">{supervisor?.name ?? supervisor?.id}</Text>
+            <Text size="xs" c="muted">Agent: </Text>
+            <Text size="xs" c="accent">{currentAgent}</Text>
+          <Group gap="sm" align="center" justify="end">
+            <Switch checked={noHistory} onChange={(e: any) => setNoHistory(!!e.currentTarget.checked)} />
+            <Label>No history</Label>
+          </Group>
+        </Group>
+        </Box>
+        <Box bg="card" p="md" rounded="md">
           <Stack gap="sm">
             {messages.map((m, i) => (
               <Box position="relative" key={i} p="none" bg={m.role === 'user' ? 'accent' : 'muted'} rounded="sm">
@@ -98,16 +119,6 @@ export default function Chat() {
             ))}
           </Stack>
         </Box>
-        <Group gap="sm" align="center">
-          <Text size="xs" c="muted">Supervisor: </Text>
-            <Text size="xs" c="accent">{supervisor?.name ?? supervisor?.id}</Text>
-            <Text size="xs" c="muted">Agent: </Text>
-            <Text size="xs" c="accent">{currentAgent}</Text>
-          <Group gap="sm" align="center" justify="end">
-            <Switch checked={noHistory} onChange={(e: any) => setNoHistory(!!e.currentTarget.checked)} />
-            <Text size="xs" c="muted">No history</Text>
-          </Group>
-        </Group>
       </Stack>
     <Box position="fixed" style={{ left: `${barRect.left}px`, width: `${barRect.width}px`, bottom: '1rem', zIndex: 10 }}>
       <Box bg="card" p="sm" rounded="md" border="1px">

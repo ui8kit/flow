@@ -2,8 +2,8 @@
 
 @import "./shadcn.css";
 
-@source "../../../../../node_modules/@ui8kit/core/dist/**/*.{js}";
-@source "../../../../../node_modules/@ui8kit/form/dist/**/*.{js}";
+
+@source "../../../../../node_modules/@ui8kit";
 @source "../../**/*.{ts,tsx}";
 
 @layer base {
